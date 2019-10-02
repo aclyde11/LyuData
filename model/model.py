@@ -9,27 +9,27 @@ class DockRegressor(nn.Module):
         super(DockRegressor, self).__init__()
         self.max_len = max_len
         self.emb = nn.Embedding(vocab_size, emb_size)
-        self.lstm = nn.GRU(emb_size, 128, dropout=0.05, num_layers=1)
-        self.convnet = nn.Sequential(
-            nn.Conv1d(128, 64, kernel_size=3, stride=2),
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
+        self.lstm = nn.RNN(emb_size, 128, dropout=0.05, num_layers=4)
+        # self.convnet = nn.Sequential(
+        #     nn.Conv1d(128, 64, kernel_size=3, stride=2),
+        #     nn.BatchNorm1d(64),
+        #     nn.ReLU(),
+        #
+        #     nn.Conv1d(64, 32, kernel_size=3, stride=1),
+        #     nn.BatchNorm1d(32),
+        #     nn.ReLU(),
+        #
+        #     nn.Conv1d(32, 8, kernel_size=3, stride=1),
+        #     nn.BatchNorm1d(8),
+        #     nn.ReLU(),
+        #
+        #     nn.Conv1d(8, 8, kernel_size=3, stride=1),
+        #     nn.BatchNorm1d(8),
+        #     nn.ReLU()
+        # )
+        # self.lstm2 = nn.GRU(8, 8, dropout=0.05, num_layers=1, batch_first=True)
 
-            nn.Conv1d(64, 32, kernel_size=3, stride=1),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
-
-            nn.Conv1d(32, 8, kernel_size=3, stride=1),
-            nn.BatchNorm1d(8),
-            nn.ReLU(),
-
-            nn.Conv1d(8, 8, kernel_size=3, stride=1),
-            nn.BatchNorm1d(8),
-            nn.ReLU()
-        )
-        self.lstm2 = nn.GRU(8, 8, dropout=0.05, num_layers=1, batch_first=True)
-
-        self.linear = nn.Sequential(nn.Linear(752, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256, 1))
+        self.linear = nn.Sequential(nn.Linear(128 * max_len, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256, 1))
 
     # pass x as a pack padded sequence please.
     def forward(self, x):
@@ -43,10 +43,11 @@ class DockRegressor(nn.Module):
         x, _ = self.lstm(x)
 
         x, _ = nn.utils.rnn.pad_packed_sequence(x, padding_value=0, total_length=self.max_len)
-        x = x.permute((1, 2, 0))
-        x = self.convnet(x)
-        x = x.permute(0, 2, 1)
-        x, _ = self.lstm2(x)
+        # x = x.permute((1, 2, 0))
+        # x = self.convnet(x)
+        # x = x.permute(0, 2, 1)
+        # x, _ = self.lstm2(x)
+        x = x.permute((1,0, 2))
         x = x.reshape(batch_size, -1)
         x = self.linear(x)
         return x
