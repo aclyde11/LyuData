@@ -91,6 +91,7 @@ def train_epoch(model, optimizer, dataloader, config):
 
         pred1, pred2 = model(y)
         loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
+
         loss += lossf2(pred2.squeeze(), (y_hat <= 0.2).float()).mean()
         loss.backward()
 
