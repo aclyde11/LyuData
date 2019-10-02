@@ -137,10 +137,12 @@ def test_model(model, optimizer, dataloader, config):
         ys_hat = torch.cat(ys_hat).flatten().numpy()
         print("Test Numpy Suite")
         print(get_metrics(ys, ys_int, ys_hat))
+        np.savez_compressed(config['testdir']+"/preds.npz", y=ys, y_int=ys_int, y_true=ys_hat)
 
 
 def main(args):
     config = getconfig(args)
+    config['testdir'] = args.testdir
     print("loading data.")
     vocab, c2i, i2c = get_vocab_from_file(args.i + "/vocab.txt")
     print("Vocab size is", len(vocab))
@@ -186,6 +188,7 @@ if __name__ == '__main__':
     parser.add_argument('--logdir', help='place to store things.', type=str, required=True)
     parser.add_argument('--testdir', type=str, required=True)
     parser.add_argument('--ct', help='continue training for longer', action='store_true')
+
     args = parser.parse_args()
     path = args.logdir
     try:
