@@ -68,8 +68,7 @@ class ToyDataset(torch.utils.data.Dataset):
         assert (len(self.s) == len(self.e))
 
     def __len__(self):
-        #return len(self.s)
-        return 2000
+        return len(self.s)
 
     def __getitem__(self, item):
         return self.s[item], self.e[item]
