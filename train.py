@@ -10,6 +10,8 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import os
 
+device = torch.device('cuda:0' if torch.cuda.is_avaliable() else 'cpu')
+
 def getconfig(args):
     config_ = {
         'epochs': 10,
@@ -74,12 +76,12 @@ class ToyDataset(torch.utils.data.Dataset):
 
 def train_epoch(model, optimizer, dataloader, config):
     model.train()
-    lossf = nn.MSELoss().cpu()
+    lossf = nn.MSELoss().to(device)
     for i, (y, y_hat) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
 
-        y_hat = y_hat.float().cpu()
-        y = [x.cpu() for x in y]
+        y_hat = y_hat.float().to(device)
+        y = [x.to(device) for x in y]
 
         pred = model(y)
         loss = lossf(pred.squeeze(), y_hat.squeeze()).mean()
@@ -101,14 +103,14 @@ def get_metrics(y_hat, y):
 def test_model(model, optimizer, dataloader, config):
     model.eval()
     with torch.no_grad():
-        lossf = nn.MSELoss().cpu()
+        lossf = nn.MSELoss().to(device)
         ys, ys_hat = [], []
         for i, (y, y_hat) in tqdm(enumerate(dataloader)):
-            y_hat = y_hat.float().cpu()
-            y = [x.cpu() for x in y]
+            y_hat = y_hat.float().to(device)
+            y = [x.to(device) for x in y]
 
             pred = model(y)
-            loss = lossf(pred.squeeze(), y_hat.squeeze()).mean()
+            _ = lossf(pred.squeeze(), y_hat.squeeze()).mean()
             ys.append(pred.cpu())
             ys_hat.append(y_hat.cpu())
         ys = torch.cat(ys).flatten().numpy()
@@ -133,7 +135,7 @@ def main(args):
     test_dataloader = torch.utils.data.DataLoader(test_data, pin_memory=True, batch_size=config['batch_size'],
                                              collate_fn=mycollate)
 
-    model = DockRegressor(config['vocab_size'], config['emb_size'], max_len=config['max_len']).cpu()
+    model = DockRegressor(config['vocab_size'], config['emb_size'], max_len=config['max_len']).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     epoch_start = 0
