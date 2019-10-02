@@ -95,11 +95,11 @@ def train_epoch(model, optimizer, dataloader, config):
         optimizer.step()
 
 
-def get_metrics(y_hat, y, bin=0.25):
+def get_metrics(y_hat, y_int, y, bin=0.25):
     from sklearn import metrics
 
     y_hat_int = (y_hat <= bin).astype(np.int32)
-    y_int = (y <= bin).astype(np.int32)
+    y_int = (y_int <= 0.5).astype(np.int32)
 
     met = {
         'r2_score': metrics.r2_score(y, y_hat),
@@ -118,21 +118,22 @@ def get_metrics(y_hat, y, bin=0.25):
 def test_model(model, optimizer, dataloader, config):
     model.eval()
     with torch.no_grad():
-        lossf = nn.L1Loss().to(device)
         ys, ys_hat = [], []
+        ys_int = []
         for i, (y, y_hat) in tqdm(enumerate(dataloader)):
             y_hat = y_hat.float().to(device)
             y = [x.to(device) for x in y]
 
-            pred = model(y)
-            _ = lossf(pred.squeeze(), y_hat.squeeze()).mean()
+            pred1, pred2 = model(y)
 
-            ys.append(pred.cpu())
+            ys.append(pred1.cpu())
+            ys_int.append(pred2.cpu())
             ys_hat.append(y_hat.cpu())
         ys = torch.cat(ys).flatten().numpy()
+        ys_int = torch.cat(ys_int).flatten().numpy()
         ys_hat = torch.cat(ys_hat).flatten().numpy()
         print("Test Numpy Suite")
-        print(get_metrics(ys, ys_hat))
+        print(get_metrics(ys, ys_int, ys_hat))
 
 
 def main(args):
