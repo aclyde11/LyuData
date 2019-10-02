@@ -64,6 +64,7 @@ def main(args):
         vocab.update([START_CHAR, END_CHAR])
         print(vocab)
         with open(args.i, 'r') as f:
+            next(f) #skip header
             for line in f:
                 smis = line.split(",")
                 _, smi = float(smis[2].strip()), smis[1].strip()
@@ -87,32 +88,34 @@ def main(args):
         count_ = 0
     count = 0
     _, c2i, _ = get_vocab_from_file(args.o + '/vocab.txt')
-    with open(args.i, 'r') as f:
-        with open(args.o + '/out.txt', 'w') as o:
-            with open(args.o + '/out_y.txt', 'w') as oy:
-                for line in tqdm(f, total=count_):
-                    smis = line.split(",")
-                    y, smis = float(smis[2].strip()), smis[1].strip()
-                    if args.permute_smiles != 0:
-                        smis = randomSmiles(smis, max_len=args.maxlen, attempts=args.permute_smiles)
-                        if smis is None:
-                            continue
-                    else:
-                        smis = [smis]
-                    for smi in smis:
-                        if len(smi) > args.maxlen - 2:
-                            continue
+    if args.o != "None":
+        with open(args.i, 'r') as f:
+            with open(args.o + '/out.txt', 'w') as o:
+                with open(args.o + '/out_y.txt', 'w') as oy:
+                    next(f) # skip header
+                    for line in tqdm(f, total=count_):
+                        smis = line.split(",")
+                        y, smis = float(smis[2].strip()), smis[1].strip()
+                        if args.permute_smiles != 0:
+                            smis = randomSmiles(smis, max_len=args.maxlen, attempts=args.permute_smiles)
+                            if smis is None:
+                                continue
+                        else:
+                            smis = [smis]
+                        for smi in smis:
+                            if len(smi) > args.maxlen - 2:
+                                continue
 
-                        # convert to index number
-                        try:
-                            i = list(map(lambda x : str(c2i(x)), smi))
-                            oy.write(str(y) + '\n')
-                            o.write(','.join(i) + '\n')
-                            count += 1
-                        except:
-                            print("key error did not print.")
-                            continue
-    print("Output",count,"smiles.")
+                            # convert to index number
+                            try:
+                                i = list(map(lambda x : str(c2i(x)), smi))
+                                oy.write(str(y) + '\n')
+                                o.write(','.join(i) + '\n')
+                                count += 1
+                            except:
+                                print("key error did not print.")
+                                continue
+        print("Output",count,"smiles.")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
