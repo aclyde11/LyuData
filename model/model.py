@@ -46,6 +46,7 @@ class DockRegressor(nn.Module):
         x = self.convnet(x)
         x = x.permute(0, 2, 1)
         x, _ = self.lstm2(x)
+        print(x.shape)
         x = x.view(batch_size, -1)
         x = self.linear(x)
         return x
