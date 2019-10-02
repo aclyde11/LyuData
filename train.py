@@ -109,7 +109,7 @@ def get_metrics(y_hat, y):
 def test_model(model, optimizer, dataloader, config):
     model.eval()
     with torch.no_grad():
-        lossf = nn.MSELoss().to(device)
+        lossf = nn.L1Loss().to(device)
         ys, ys_hat = [], []
         for i, (y, y_hat) in tqdm(enumerate(dataloader)):
             y_hat = y_hat.float().to(device)
@@ -143,7 +143,7 @@ def main(args):
                                                   collate_fn=mycollate)
 
     model = DockRegressor(config['vocab_size'], config['emb_size'], max_len=config['max_len']).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
     epoch_start = 0
     if args.ct:
