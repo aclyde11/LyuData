@@ -98,21 +98,21 @@ def train_epoch(model, optimizer, dataloader, config):
         optimizer.step()
 
 
-def get_metrics(y_hat, y_int, y, bin=0.2):
+def get_metrics(y_pred, y_int_pred, y, bin=0.2):
     from sklearn import metrics
 
-    y_hat_int = (y_int >= 0.5).astype(np.int32)
+    y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
     y_int = (y <= bin).astype(np.int32)
 
     met = {
-        'r2_score': metrics.r2_score(y, y_hat),
-        'mse': metrics.mean_squared_error(y, y_hat),
-        'mae': metrics.mean_absolute_error(y, y_hat),
-        'median error': metrics.median_absolute_error(y, y_hat),
+        'r2_score': metrics.r2_score(y, y_pred),
+        'mse': metrics.mean_squared_error(y, y_pred),
+        'mae': metrics.mean_absolute_error(y, y_pred),
+        'median error': metrics.median_absolute_error(y, y_pred),
 
-        'balacc' : metrics.balanced_accuracy_score(y_int, y_hat_int),
-        'mcc' : metrics.matthews_corrcoef(y_int, y_hat_int),
-        'recall' : metrics.recall_score(y_int, y_hat_int)
+        'balacc' : metrics.balanced_accuracy_score(y_int, y_int_pred),
+        'mcc' : metrics.matthews_corrcoef(y_int, y_int_pred),
+        'recall' : metrics.recall_score(y_int, y_int_pred)
     }
 
     return met
