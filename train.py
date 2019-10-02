@@ -90,7 +90,7 @@ def train_epoch(model, optimizer, dataloader, config):
 
         pred = model(y)
         loss = lossf(pred.squeeze(), y_hat.squeeze()).mean()
-        loss += lossf2(pred.squeeze(), (y_hat >= 0.25).long()).mean()
+        loss += lossf2(pred.squeeze(), (y_hat >= 0.25).float()).mean()
         loss.backward()
         optimizer.step()
 
