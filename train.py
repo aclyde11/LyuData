@@ -92,18 +92,16 @@ def train_epoch(model, optimizer, dataloader, config):
         pred1, pred2 = model(y)
         loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
 
-        loss += lossf2(pred2.squeeze(), (y_hat <= 0.2).float()).mean()
+        loss += lossf2(pred2.squeeze(), (y_hat <= 0.3).float()).mean()
         loss.backward()
-
-
 
         optimizer.step()
 
 
-def get_metrics(y_pred, y_int_pred, y, bin=0.2):
+def get_metrics(y_pred, y_int_pred, y, bin=0.3):
     from sklearn import metrics
 
-    y_int_pred = (F.sigmoid(y_int_pred) >= 0.5).astype(np.int32)
+    y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
     y_int = (y <= bin).astype(np.int32)
 
     met = {
@@ -132,7 +130,7 @@ def test_model(model, optimizer, dataloader, config):
             pred1, pred2 = model(y)
 
             ys.append(pred1.cpu())
-            ys_int.append(pred2.cpu())
+            ys_int.append((F.sigmoid(pred2.cpu())))
             ys_hat.append(y_hat.cpu())
         ys = torch.cat(ys).flatten().numpy()
         ys_int = torch.cat(ys_int).flatten().numpy()
