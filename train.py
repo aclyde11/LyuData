@@ -1,22 +1,23 @@
 import argparse
-from model.vocab import get_vocab_from_file, START_CHAR, END_CHAR
-from model.model import DockRegressor
-import torch.utils.data
+import os
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.utils.rnn
-import torch.nn.functional as F
+import torch.utils.data
 from tqdm import tqdm
-import os
 
+from model.model import DockRegressor
+from model.vocab import get_vocab_from_file, START_CHAR
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
+
+
 def getconfig(args):
     config_ = {
         'epochs': 10,
-        'batch_size': 512,
+        'batch_size': 64,
         'vocab_size': 37,
         'emb_size': 42,
         'sample_freq': 1,
@@ -25,17 +26,19 @@ def getconfig(args):
 
     return config_
 
+
 def count_valid_samples(smiles):
     from rdkit import Chem
     count = 0
     for smi in smiles:
         try:
-            mol     = Chem.MolFromSmiles(smi[1:-1])
+            mol = Chem.MolFromSmiles(smi[1:-1])
         except:
             continue
         if mol is not None:
             count += 1
     return count
+
 
 def get_input_data(fname, fname2, c2i):
     lines = open(fname, 'r').readlines()
@@ -45,11 +48,12 @@ def get_input_data(fname, fname2, c2i):
               lines]
 
     lines = open(fname2, 'r')
-    ys = list(map(lambda x : torch.tensor(float(x.strip())), lines))
-    assert(len(ys) == len(lines1))
+    ys = list(map(lambda x: torch.tensor(float(x.strip())), lines))
+    assert (len(ys) == len(lines1))
     print("Read", len(lines1), "SMILES.")
 
     return lines1, ys
+
 
 def mycollate(x):
     x_batches = []
@@ -88,17 +92,19 @@ def train_epoch(model, optimizer, dataloader, config):
         loss.backward()
         optimizer.step()
 
+
 def get_metrics(y_hat, y):
     from sklearn import metrics
 
     met = {
-        'r2_score' : metrics.r2_score(y, y_hat),
-        'mse' : metrics.mean_squared_error(y, y_hat),
-        'mae' : metrics.mean_absolute_error(y, y_hat),
-        'median error' : metrics.median_absolute_error(y, y_hat)
+        'r2_score': metrics.r2_score(y, y_hat),
+        'mse': metrics.mean_squared_error(y, y_hat),
+        'mae': metrics.mean_absolute_error(y, y_hat),
+        'median error': metrics.median_absolute_error(y, y_hat)
     }
 
     return met
+
 
 def test_model(model, optimizer, dataloader, config):
     model.eval()
@@ -118,6 +124,7 @@ def test_model(model, optimizer, dataloader, config):
         print("Test Numpy Suite")
         print(get_metrics(ys, ys_hat))
 
+
 def main(args):
     config = getconfig(args)
     print("loading data.")
@@ -133,7 +140,7 @@ def main(args):
     dataloader = torch.utils.data.DataLoader(input_data, pin_memory=True, batch_size=config['batch_size'],
                                              collate_fn=mycollate)
     test_dataloader = torch.utils.data.DataLoader(test_data, pin_memory=True, batch_size=config['batch_size'],
-                                             collate_fn=mycollate)
+                                                  collate_fn=mycollate)
 
     model = DockRegressor(config['vocab_size'], config['emb_size'], max_len=config['max_len']).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -146,15 +153,14 @@ def main(args):
         optimizer.load_state_dict(pt['optim_state_dict'])
         epoch_start = pt['epoch'] + 1
 
-
     for epoch in range(epoch_start, config['epochs']):
         train_epoch(model, optimizer, dataloader, config)
         test_model(model, optimizer, test_dataloader, config)
         torch.save(
             {
-                'state_dict' : model.state_dict(),
-                'optim_state_dict' : optimizer.state_dict(),
-                'epoch' : epoch
+                'state_dict': model.state_dict(),
+                'optim_state_dict': optimizer.state_dict(),
+                'epoch': epoch
             }, args.logdir + "/autosave.model.pt"
         )
 
