@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.utils.rnn
 import torch.utils.data
+import torch.nn.functional as F
 from tqdm import tqdm
 
 from model.model import DockRegressor
@@ -101,7 +102,7 @@ def train_epoch(model, optimizer, dataloader, config):
 def get_metrics(y_pred, y_int_pred, y, bin=0.2):
     from sklearn import metrics
 
-    y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
+    y_int_pred = (F.sigmoid(y_int_pred) >= 0.5).astype(np.int32)
     y_int = (y <= bin).astype(np.int32)
 
     met = {
