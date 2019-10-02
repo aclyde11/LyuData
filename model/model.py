@@ -28,7 +28,7 @@ class DockRegressor(nn.Module):
         )
         self.lstm2 = nn.GRU(8, 8, dropout=0.05, num_layers=1, batch_first=True)
 
-        self.linear = nn.Linear(392, 1)
+        self.linear = nn.Sequential(nn.Linear(752, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256, 1))
 
     # pass x as a pack padded sequence please.
     def forward(self, x):
