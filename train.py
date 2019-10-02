@@ -178,7 +178,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', help='Data from vocab folder', type=str, required=True)
     parser.add_argument('--logdir', help='place to store things.', type=str, required=True)
     parser.add_argument('--testdir', type=str, required=True)
-    parser.add_argument('--ct', help='continue training for longer', type=bool, default=False)
+    parser.add_argument('--ct', help='continue training for longer', action='store_true')
     args = parser.parse_args()
     path = args.logdir
     try:
