@@ -90,16 +90,19 @@ def train_epoch(model, optimizer, dataloader, config):
 
         pred1, pred2 = model(y)
         loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
-        loss += lossf2(pred2.squeeze(), (y_hat >= 0.25).float()).mean()
+        loss += lossf2(pred2.squeeze(), (y_hat <= 0.2).float()).mean()
         loss.backward()
+
+
+
         optimizer.step()
 
 
-def get_metrics(y_hat, y_int, y, bin=0.25):
+def get_metrics(y_hat, y_int, y, bin=0.2):
     from sklearn import metrics
 
-    y_hat_int = (y_hat <= bin).astype(np.int32)
-    y_int = (y_int <= 0.5).astype(np.int32)
+    y_hat_int = (y_int >= 0.5).astype(np.int32)
+    y_int = (y <= bin).astype(np.int32)
 
     met = {
         'r2_score': metrics.r2_score(y, y_hat),
