@@ -14,10 +14,10 @@ def getconfig(args):
     config_ = {
         'epochs': 10,
         'batch_size': 512,
-        'vocab_size': 33,
-        'emb_size': 32,
+        'vocab_size': 37,
+        'emb_size': 42,
         'sample_freq': 1,
-        'max_len': 155
+        'max_len': 202
     }
 
     return config_

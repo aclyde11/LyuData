@@ -18,7 +18,7 @@ class DockRegressor(nn.Module):
             nn.BatchNorm1d(8),
             nn.ReLU()
         )
-        self.linear = nn.Linear(304, 1)
+        self.linear = nn.Linear(392, 1)
 
     # pass x as a pack padded sequence please.
     def forward(self, x):
