@@ -26,6 +26,8 @@ class DockRegressor(nn.Module):
             nn.BatchNorm1d(8),
             nn.ReLU()
         )
+        self.lstm2 = nn.GRU(8, 8, dropout=0.05, num_layers=1, batch_first=True)
+
         self.linear = nn.Linear(392, 1)
 
     # pass x as a pack padded sequence please.
@@ -43,6 +45,7 @@ class DockRegressor(nn.Module):
         x = x.permute((1,2,0))
 
         x = self.convnet(x)
+        x, _ = self.lstm2(x)
         x = x.view(batch_size, -1)
         x = self.linear(x)
         return x
