@@ -43,8 +43,8 @@ class DockRegressor(nn.Module):
 
         x, _  = nn.utils.rnn.pad_packed_sequence(x, padding_value=0, total_length=self.max_len)
         x = x.permute((1,2,0))
-
         x = self.convnet(x)
+        x = x.permute(0, 2, 1)
         x, _ = self.lstm2(x)
         x = x.view(batch_size, -1)
         x = self.linear(x)
