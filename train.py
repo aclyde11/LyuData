@@ -88,9 +88,9 @@ def train_epoch(model, optimizer, dataloader, config):
         y_hat = y_hat.float().to(device)
         y = [x.to(device) for x in y]
 
-        pred = model(y)
-        loss = lossf(pred.squeeze(), y_hat.squeeze()).mean()
-        loss += lossf2(pred.squeeze(), (y_hat >= 0.25).float()).mean()
+        pred1, pred2 = model(y)
+        loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
+        loss += lossf2(pred2.squeeze(), (y_hat >= 0.25).float()).mean()
         loss.backward()
         optimizer.step()
 
