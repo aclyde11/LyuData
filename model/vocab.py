@@ -88,7 +88,7 @@ def main(args):
         count_ = 0
     count = 0
     _, c2i, _ = get_vocab_from_file(args.o + '/vocab.txt')
-    if args.o != "None":
+    if args.permute_smiles != -1:
         with open(args.i, 'r') as f:
             with open(args.o + '/out.txt', 'w') as o:
                 with open(args.o + '/out_y.txt', 'w') as oy:
