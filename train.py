@@ -10,8 +10,9 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import os
 
-device = torch.device('cuda:0' if torch.cuda.is_avaliable() else 'cpu')
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
 def getconfig(args):
     config_ = {
         'epochs': 10,
