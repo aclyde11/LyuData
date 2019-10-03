@@ -79,11 +79,11 @@ class ToyDataset(torch.utils.data.Dataset):
         return self.s[item], self.e[item]
 
 
-def train_epoch(model, optimizer, dataloader, config):
+def train_epoch(model, optimizer, dataloader, config, bin1=0.25, bin2=0.4, bin1_weight=8.0, bin2_weight=4.0):
     model.train()
     lossf = nn.MSELoss().to(device)
-    lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(10.0).float()).to(device)
-    lossf3 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(3.0).float()).to(device)
+    lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
+    lossf3 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin2_weight).float()).to(device)
 
     for i, (y, y_hat) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
@@ -93,15 +93,15 @@ def train_epoch(model, optimizer, dataloader, config):
 
         pred1, pred2, pred3 = model(y)
         loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
-        loss += lossf2(pred2.squeeze(), (y_hat <= 0.25).float()).mean()
-        loss += lossf3(pred3.squeeze(), (y_hat <= 0.4).float()).mean()
+        loss += lossf2(pred2.squeeze(), (y_hat <= bin1).float()).mean()
+        loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean()
 
         loss.backward()
 
         optimizer.step()
 
 
-def get_metrics(y_pred, y_int_pred, y, bin=0.3):
+def get_metrics(y_pred, y_int_pred, y, bin=0.25):
     from sklearn import metrics
 
     y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
@@ -137,7 +137,7 @@ def test_model(model, optimizer, dataloader, config):
             pred1, pred2, _ = model(y)
 
             ys.append(pred1.cpu())
-            ys_int.append((F.sigmoid(pred2.cpu())))
+            ys_int.append((torch.sigmoid(pred2.cpu())))
             ys_hat.append(y_hat.cpu())
         ys = torch.cat(ys).flatten().numpy()
         ys_int = torch.cat(ys_int).flatten().numpy()
