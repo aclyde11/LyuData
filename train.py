@@ -82,17 +82,20 @@ class ToyDataset(torch.utils.data.Dataset):
 def train_epoch(model, optimizer, dataloader, config):
     model.train()
     lossf = nn.MSELoss().to(device)
-    lossf2 = nn.BCEWithLogitsLoss().to(device)
+    lossf2 = nn.BCEWithLogitsLoss(pos_weight=10.0).to(device)
+    lossf3 = nn.BCEWithLogitsLoss(pos_weight=3.0).to(device)
+
     for i, (y, y_hat) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
 
         y_hat = y_hat.float().to(device)
         y = [x.to(device) for x in y]
 
-        pred1, pred2 = model(y)
+        pred1, pred2, pred3 = model(y)
         loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
+        loss += lossf2(pred2.squeeze(), (y_hat <= 0.25).float()).mean()
+        loss += lossf3(pred3.squeeze(), (y_hat <= 0.4).float()).mean()
 
-        loss += lossf2(pred2.squeeze(), (y_hat <= 0.3).float()).mean()
         loss.backward()
 
         optimizer.step()
@@ -104,6 +107,8 @@ def get_metrics(y_pred, y_int_pred, y, bin=0.3):
     y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
     y_int = (y <= bin).astype(np.int32)
 
+    cm = metrics.confusion_matrix(y_int, y_int_pred)
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     met = {
         'r2_score': metrics.r2_score(y, y_pred),
         'mse': metrics.mean_squared_error(y, y_pred),
@@ -112,7 +117,9 @@ def get_metrics(y_pred, y_int_pred, y, bin=0.3):
 
         'balacc' : metrics.balanced_accuracy_score(y_int, y_int_pred),
         'mcc' : metrics.matthews_corrcoef(y_int, y_int_pred),
-        'recall' : metrics.recall_score(y_int, y_int_pred)
+        'recall' : metrics.recall_score(y_int, y_int_pred),
+        'tpr' : cm[0,0],
+        'tnr' : cm[1,1]
     }
 
     return met
@@ -127,7 +134,7 @@ def test_model(model, optimizer, dataloader, config):
             y_hat = y_hat.float().to(device)
             y = [x.to(device) for x in y]
 
-            pred1, pred2 = model(y)
+            pred1, pred2, _ = model(y)
 
             ys.append(pred1.cpu())
             ys_int.append((F.sigmoid(pred2.cpu())))
