@@ -92,29 +92,31 @@ def main(args):
         with open(args.i, 'r') as f:
             with open(args.o + '/out.txt', 'w') as o:
                 with open(args.o + '/out_y.txt', 'w') as oy:
-                    next(f) # skip header
-                    for line in tqdm(f, total=count_):
-                        smis = line.split(",")
-                        y, smis = float(smis[2].strip()), smis[1].strip()
-                        if args.permute_smiles != 0:
-                            smis = randomSmiles(smis, max_len=args.maxlen, attempts=args.permute_smiles)
-                            if smis is None:
-                                continue
-                        else:
-                            smis = [smis]
-                        for smi in smis:
-                            if len(smi) > args.maxlen - 2:
-                                continue
+                    with open(args.o + '/out_names.txt', 'w') as on:
+                        next(f) # skip header
+                        for line in tqdm(f, total=count_):
+                            smis = line.split(",")
+                            name, y, smis = str(smis[0].strip()), float(smis[2].strip()), smis[1].strip()
+                            if args.permute_smiles != 0:
+                                smis = randomSmiles(smis, max_len=args.maxlen, attempts=args.permute_smiles)
+                                if smis is None:
+                                    continue
+                            else:
+                                smis = [smis]
+                            for smi in smis:
+                                if len(smi) > args.maxlen - 2:
+                                    continue
 
-                            # convert to index number
-                            try:
-                                i = list(map(lambda x : str(c2i(x)), smi))
-                                oy.write(str(y) + '\n')
-                                o.write(','.join(i) + '\n')
-                                count += 1
-                            except:
-                                print("key error did not print.")
-                                continue
+                                # convert to index number
+                                try:
+                                    i = list(map(lambda x : str(c2i(x)), smi))
+                                    on.write(name + "\n")
+                                    oy.write(str(y) + '\n')
+                                    o.write(','.join(i) + '\n')
+                                    count += 1
+                                except:
+                                    print("key error did not print.")
+                                    continue
         print("Output",count,"smiles.")
 
 if __name__ == '__main__':
