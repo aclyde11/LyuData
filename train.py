@@ -41,10 +41,9 @@ def count_valid_samples(smiles):
     return count
 
 
-def get_input_data(fname, fname2, c2i):
+def get_input_data(fname, fname2, fname3, c2i):
     lines = open(fname, 'r').readlines()
-    lines = (map(lambda x: x.split(','), (filter(lambda x: len(x) != 0, map(lambda x: x.strip(), lines)))))
-
+    lines = list(map(lambda x: x.split(','), (filter(lambda x: len(x) != 0, map(lambda x: x.strip(), lines)))))
     lines1 = [torch.from_numpy(np.array([c2i(START_CHAR)] + list(map(lambda x: int(x), y)), dtype=np.int64)) for y in
               lines]
 
@@ -53,39 +52,45 @@ def get_input_data(fname, fname2, c2i):
     assert (len(ys) == len(lines1))
     print("Read", len(lines1), "SMILES.")
 
-    return lines1, ys
+    lines = open(fname3, 'r')
+    names = list(map(lambda x: x.strip(), lines))
+
+    return lines1, ys, names
 
 
 def mycollate(x):
     x_batches = []
     y_batchese = []
+    n_batches = []
     for i in x:
         x_batches.append(i[0])
         y_batchese.append(i[1])
+        n_batches.append(i[2])
     y_batchese = torch.stack(y_batchese, dim=0).float()
-    return x_batches, y_batchese
+    return x_batches, y_batchese, n_batches
 
 
 class ToyDataset(torch.utils.data.Dataset):
-    def __init__(self, s, e):
+    def __init__(self, s, e,n):
         self.s = s
         self.e = e
+        self.n = n
         assert (len(self.s) == len(self.e))
 
     def __len__(self):
         return len(self.s)
 
     def __getitem__(self, item):
-        return self.s[item], self.e[item]
+        return self.s[item], self.e[item], self.n[item]
 
 
-def train_epoch(model, optimizer, dataloader, config, bin1=0.25, bin2=0.4, bin1_weight=12.0, bin2_weight=5.0):
+def train_epoch(model, optimizer, dataloader, config, bin1=0.25, bin2=0.4, bin1_weight=14.0, bin2_weight=5.0):
     model.train()
-    lossf = nn.MSELoss().to(device)
+    lossf = nn.L1Loss().to(device)
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
     lossf3 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin2_weight).float()).to(device)
 
-    for i, (y, y_hat) in tqdm(enumerate(dataloader)):
+    for i, (y, y_hat, _) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
 
         y_hat = y_hat.float().to(device)
@@ -118,8 +123,8 @@ def get_metrics(y_pred, y_int_pred, y, bin=0.25):
         'balacc' : metrics.balanced_accuracy_score(y_int, y_int_pred),
         'mcc' : metrics.matthews_corrcoef(y_int, y_int_pred),
         'recall' : metrics.recall_score(y_int, y_int_pred),
-        'tpr' : cm[0,0],
-        'tnr' : cm[1,1]
+        'tnr' : cm[0,0],
+        'tpr' : cm[1,1]
     }
 
     return met
@@ -130,7 +135,8 @@ def test_model(model, optimizer, dataloader, config):
     with torch.no_grad():
         ys, ys_hat = [], []
         ys_int = []
-        for i, (y, y_hat) in tqdm(enumerate(dataloader)):
+        names = []
+        for i, (y, y_hat,name) in tqdm(enumerate(dataloader)):
             y_hat = y_hat.float().to(device)
             y = [x.to(device) for x in y]
 
@@ -139,12 +145,13 @@ def test_model(model, optimizer, dataloader, config):
             ys.append(pred1.cpu())
             ys_int.append((torch.sigmoid(pred2.cpu())))
             ys_hat.append(y_hat.cpu())
+            names.append(name)
         ys = torch.cat(ys).flatten().numpy()
         ys_int = torch.cat(ys_int).flatten().numpy()
         ys_hat = torch.cat(ys_hat).flatten().numpy()
         print("Test Numpy Suite")
         print(get_metrics(ys, ys_int, ys_hat))
-        np.savez_compressed(config['testdir']+"/preds.npz", y=ys, y_int=ys_int, y_true=ys_hat)
+        np.savez_compressed(config['testdir']+"/preds.npz", y=ys, y_int=ys_int, y_true=ys_hat, names=names)
 
 
 def main(args):
@@ -153,10 +160,10 @@ def main(args):
     print("loading data.")
     vocab, c2i, i2c = get_vocab_from_file(args.i + "/vocab.txt")
     print("Vocab size is", len(vocab))
-    s, e = get_input_data(args.i + "/out.txt", args.i + "/out_y.txt", c2i)
-    s_t, e_t = get_input_data(args.testdir + "/out.txt", args.testdir + "/out_y.txt", c2i)
-    input_data = ToyDataset(s, e)
-    test_data = ToyDataset(s_t, e_t)
+    s, e, n = get_input_data(args.i + "/out.txt", args.i + "/out_y.txt", c2i)
+    s_t, e_t, n_t = get_input_data(args.testdir + "/out.txt", args.testdir + "/out_y.txt", c2i)
+    input_data = ToyDataset(s, e, n)
+    test_data = ToyDataset(s_t, e_t, n_t)
     print("Done.")
 
     ## make data generator
