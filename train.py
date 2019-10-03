@@ -82,8 +82,8 @@ class ToyDataset(torch.utils.data.Dataset):
 def train_epoch(model, optimizer, dataloader, config):
     model.train()
     lossf = nn.MSELoss().to(device)
-    lossf2 = nn.BCEWithLogitsLoss(pos_weight=10.0).to(device)
-    lossf3 = nn.BCEWithLogitsLoss(pos_weight=3.0).to(device)
+    lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(10.0).float()).to(device)
+    lossf3 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(3.0).float()).to(device)
 
     for i, (y, y_hat) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
