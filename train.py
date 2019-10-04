@@ -146,12 +146,29 @@ def test_model(model, optimizer, dataloader, config):
             ys_int.append((torch.sigmoid(pred2.cpu())))
             ys_hat.append(y_hat.cpu())
             names.append(name)
-        ys = torch.cat(ys).flatten().numpy()
-        ys_int = torch.cat(ys_int).flatten().numpy()
-        ys_hat = torch.cat(ys_hat).flatten().numpy()
+        ys = torch.cat(ys).flatten().numpy().reshape(-1)
+        ys_int = torch.cat(ys_int).flatten().numpy().reshape(-1)
+        ys_hat = torch.cat(ys_hat).flatten().numpy().reshape(-1)
+
         print("Test Numpy Suite")
         print(get_metrics(ys, ys_int, ys_hat))
-        np.savez_compressed(config['testdir']+"/preds.npz", y=ys, y_int=ys_int, y_true=ys_hat, names=names)
+        try:
+            np.savez_compressed(config['testdir']+"/preds.npz", y=ys, y_int=ys_int, y_true=ys_hat, names=names)
+        except KeyboardInterrupt:
+            print("caught")
+            exit()
+        except:
+            with open(config['testdir']+"/preds.csv") as f:
+                f.write("pred,pred_int,y,name\n")
+                for i in range(ys.shape[0]):
+                    f.write(str(ys[i]))
+                    f.write(",")
+                    f.write(str(ys_int[i]))
+                    f.write(",")
+                    f.write(str(ys_hat[i]))
+                    f.write(",")
+                    f.write(str(names[i]))
+                    f.write("\n")
 
 
 def main(args):
