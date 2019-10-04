@@ -23,33 +23,35 @@ def get_mol(smi):
         return None
 
 def procress1(x):
-    smi,name =x
+    name, smi, _ = x
+
     mol = get_mol(smi)
     if mol is None:
-        return (None, name)
+        return (name, smi, None, None)
     fp = compute_finerprint(mol)
     scaff = getScaffold(mol)
-    return (name, smi, scaff, fp.ToBitString())
+    return name, smi, scaff, fp.ToBitString()
 
 def main(args):
     print("Computing ECFP Fingerprints and Scaffolds for", args.i, "using", args.n, "jobs")
 
     infile = open(args.i, 'r').readlines()
-    infile = (map(lambda x : x.strip().split(' '), infile))
+    infile = map(lambda x : x.strip().split(','), infile)
 
     p = Pool(args.n)
     res = p.imap_unordered(procress1, infile, chunksize=100)
 
     with open(args.o, 'w') as f:
         for (name, smi, scaff, fp) in res:
-            f.write(name)
-            f.write(',')
-            f.write(smi)
-            f.write(',')
-            f.write(scaff)
-            f.write(',')
-            f.write(fp)
-            f.write('\n')
+            if scaff is not None and fp is not None:
+                f.write(name)
+                f.write(',')
+                f.write(smi)
+                f.write(',')
+                f.write(scaff)
+                f.write(',')
+                f.write(fp)
+                f.write('\n')
 
 
 if __name__ =='__main__':

@@ -20,7 +20,7 @@ def main(args):
     config = getconfig(args)
     config['testdir'] = args.testdir
     print("loading data.")
-    vocab, c2i, i2c = get_vocab_from_file(args.i + "/vocab.txt")
+    vocab, c2i, i2c = get_vocab_from_file(args.testdir + "/vocab.txt")
     print("Vocab size is", len(vocab))
     s_t, e_t, n_t = get_input_data(args.testdir + "/out.txt", args.testdir + "/out_y.txt", args.testdir + "/out_names.txt", c2i)
     test_data = ToyDataset(s_t, e_t, n_t)
