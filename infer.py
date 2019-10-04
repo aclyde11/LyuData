@@ -1,19 +1,16 @@
 import argparse
 import os
 
-import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.utils.rnn
 import torch.utils.data
-from tqdm import tqdm
 
 from model.model import DockRegressor
-from model.vocab import get_vocab_from_file, START_CHAR
+from model.vocab import get_vocab_from_file
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-from train import getconfig, get_input_data,mycollate, ToyDataset, get_metrics, test_model
+from train import getconfig, get_input_data,mycollate, ToyDataset, test_model
 
 
 def main(args):
