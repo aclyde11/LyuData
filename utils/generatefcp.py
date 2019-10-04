@@ -3,11 +3,13 @@ from rdkit.Chem import AllChem
 import argparse
 from multiprocessing import Pool
 from rdkit.Chem.Scaffolds.MurckoScaffold import GetScaffoldForMol
+import rdkit.Chem.rdmolops
 from tqdm import tqdm
 import time
 
 def compute_finerprint(mol, raidus=2):
-    return AllChem.GetMorganFingerprintAsBitVect(mol,raidus,useFeatures=True) #equivlanet to ECFP4
+    #return AllChem.GetMorganFingerprintAsBitVect(mol,raidus,useFeatures=True) #equivlanet to ECFP4
+    return Chem.rdmolops.RDKFingerprint(mol, raidus=2, fpSize=512)
 
 def getScaffold(mol):
     try:
