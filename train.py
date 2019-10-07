@@ -84,11 +84,12 @@ class ToyDataset(torch.utils.data.Dataset):
         return self.s[item], self.e[item], self.n[item]
 
 
-def train_epoch(model, optimizer, dataloader, config, bin1=0.25, bin2=0.4, bin1_weight=14.0, bin2_weight=5.0):
+def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin1_weight=20.0, bin2_weight=5.0, bin3=0.2, bin3_weight=3.0):
     model.train()
     lossf = nn.L1Loss().to(device)
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
     lossf3 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin2_weight).float()).to(device)
+    lossf4 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin3_weight).float()).to(device)
 
     for i, (y, y_hat, _) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
@@ -96,20 +97,21 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.25, bin2=0.4, bin1_
         y_hat = y_hat.float().to(device)
         y = [x.to(device) for x in y]
 
-        pred1, pred2, pred3 = model(y)
+        pred1, pred2, pred3, pred4 = model(y)
         loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
-        loss += lossf2(pred2.squeeze(), (y_hat <= bin1).float()).mean()
-        loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean()
+        loss += lossf2(pred2.squeeze(), (y_hat <= bin1).float()).mean() #0.001
+        loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean() #0.005
+        loss += lossf4(pred3.squeeze(), (y_hat <= bin3).float()).mean() #0.01
 
         loss.backward()
 
         optimizer.step()
 
 
-def get_metrics(y_pred, y_int_pred, y, bin=0.25):
+def get_metrics(y_pred, y_int_pred, y, bin=0.08):
     from sklearn import metrics
 
-    y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
+    y_int_pred = (y_int_pred >= 0.25).astype(np.int32)
     y_int = (y <= bin).astype(np.int32)
 
     cm = metrics.confusion_matrix(y_int, y_int_pred)
@@ -140,7 +142,7 @@ def test_model(model, optimizer, dataloader, config):
             y_hat = y_hat.float().to(device)
             y = [x.to(device) for x in y]
 
-            pred1, pred2, _ = model(y)
+            pred1, pred2, _, _ = model(y)
 
             ys.append(pred1.cpu())
             ys_int.append((torch.sigmoid(pred2.cpu())))

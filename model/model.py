@@ -32,6 +32,7 @@ class DockRegressor(nn.Module):
         self.linear1 = nn.Sequential(nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
         self.linear2 = nn.Sequential(nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
         self.linear3 = nn.Sequential(nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
+        self.linear4 = nn.Sequential(nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
 
 
     # pass x as a pack padded sequence please.
@@ -52,4 +53,4 @@ class DockRegressor(nn.Module):
         # x, _ = self.lstm2(x)
         # x = x.permute((1,0, 2))
         x = x.reshape(batch_size, -1)
-        return self.linear1(x), self.linear2(x), self.linear3(x)
+        return self.linear1(x), self.linear2(x), self.linear3(x), self.linear4(x)
