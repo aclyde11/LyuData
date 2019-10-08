@@ -7,12 +7,47 @@ import torch.nn as nn
 import torch.nn.utils.rnn
 import torch.utils.data
 import torch.nn.functional as F
+import math
 from tqdm import tqdm
 
 from model.model import DockRegressor
 from model.vocab import get_vocab_from_file, START_CHAR
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
+def make_loss(n_bins, a, b, sigma, l, w_i):
+    def loss(true, pred):
+        s = 0
+        denom = math.sqrt(2) * sigma
+
+        for i in range(n_bins):
+            mu = true
+            Z = 0.5 * (torch.erf((b - mu) / denom)
+                       - torch.erf((a - mu) / denom))
+            Z = torch.flatten(Z)
+            l_i = l[i]
+            p_i = torch.mul((1.0 / (2.0 * Z)),
+                            torch.flatten(torch.erf((l_i + w_i - mu) / denom) - torch.erf((l_i - mu) / denom)))
+            f_i = pred[:, i]
+            s += torch.mul(p_i, f_i)
+
+        return -1.0 * s
+
+
+
+    return loss
+
+
+def getBinMeasures(y):
+    res = np.histogram(y, bins=100, range=(-0.1, 1.1))
+    bin_counts = res[0]
+    bin_l = res[1]
+
+    lossf = make_loss(100, -0.1, 1.1,  math.sqrt(bin_l[1] - bin_l[0]), bin_l, bin_l[1] - bin_l[0])
+    return bin_counts
+
+
 
 
 
@@ -85,12 +120,12 @@ class ToyDataset(torch.utils.data.Dataset):
         return self.s[item], self.e[item], self.n[item]
 
 
-def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1_weight=2.0, bin2_weight=25.0, bin3=0.5, bin3_weight=1.01):
+def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin1_weight=100.0, bin2_weight=25.0, bin3=0.5, bin3_weight=1.01):
     model.train()
     lossf = nn.L1Loss().to(device)
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
-    # lossf3 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin2_weight).float()).to(device)
-    # lossf4 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin3_weight).float()).to(device)
+    lossf3 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin2_weight).float()).to(device)
+    lossf4 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin3_weight).float()).to(device)
 
     for i, (y, y_hat, _) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
@@ -98,11 +133,11 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1
         y_hat = y_hat.float().to(device)
         y = [x.to(device) for x in y]
 
-        pred1, pred2, _, _ = model(y)
+        pred1, pred2, pred3, pred4 = model(y)
         loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
         loss += lossf2(pred2.squeeze(), (y_hat <= bin1).float()).mean() #0.001
-        # loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean() #0.005
-        # loss += lossf4(pred3.squeeze(), (y_hat <= bin3).float()).mean() #0.01
+        loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean() #0.005
+        loss += lossf4(pred3.squeeze(), (y_hat <= bin3).float()).mean() #0.01
 
         loss.backward()
 
