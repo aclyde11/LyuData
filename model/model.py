@@ -29,10 +29,12 @@ class DockRegressor(nn.Module):
         )
         # self.lstm2 = nn.GRU(8, 8, dropout=0.05, num_layers=1, batch_first=True)
 
-        self.linear1 = nn.Sequential(nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
-        self.linear2 = nn.Sequential(nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
-        self.linear3 = nn.Sequential(nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
-        self.linear4 = nn.Sequential(nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
+        self.linear1 = nn.Sequential(nn.Dropout(0.15),         nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
+        self.objective_chose = nn.Sequential(nn.Dropout(0.15), nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU())
+
+        self.linear2 =  nn.Linear(256,1)
+        self.linear3 =  nn.Linear(256,1)
+        self.linear4 =  nn.Linear(256,1)
 
 
     # pass x as a pack padded sequence please.
@@ -53,4 +55,6 @@ class DockRegressor(nn.Module):
         # x, _ = self.lstm2(x)
         # x = x.permute((1,0, 2))
         x = x.reshape(batch_size, -1)
-        return self.linear1(x), self.linear2(x), self.linear3(x), self.linear4(x)
+
+        choices = self.objective_chose(x)
+        return self.linear1(x), self.linear2(choices), self.linear3(choices), self.linear4(choices)
