@@ -84,7 +84,7 @@ class ToyDataset(torch.utils.data.Dataset):
         return self.s[item], self.e[item], self.n[item]
 
 
-def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin1_weight=100.0, bin2_weight=25.0, bin3=0.2, bin3_weight=15.0):
+def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin1_weight=100.0, bin2_weight=25.0, bin3=0.5, bin3_weight=1.01):
     model.train()
     lossf = nn.L1Loss().to(device)
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
@@ -114,7 +114,7 @@ def get_metrics(y_pred, y_int_pred, y_int_pred2, y, bin=0.08):
     y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
     y_int_pred2 = (y_int_pred2 >= 0.5).astype(np.int32)
     y_int = (y <= bin).astype(np.int32)
-    y_int2 = (y <= 0.146).astype(np.int32)
+    y_int2 = (y <= 0.5).astype(np.int32)
 
 
     cm = metrics.confusion_matrix(y_int, y_int_pred)
@@ -151,11 +151,11 @@ def test_model(model, optimizer, dataloader, config):
             y_hat = y_hat.float().to(device)
             y = [x.to(device) for x in y]
 
-            pred1, pred2, _, _ = model(y)
+            pred1, pred2, _, pred3 = model(y)
 
             ys.append(pred1.cpu())
             ys_int.append((torch.sigmoid(pred2.cpu())))
-            ys_int2.append((torch.sigmoid(pred2.cpu())))
+            ys_int2.append((torch.sigmoid(pred3.cpu())))
             ys_hat.append(y_hat.cpu())
             for n in name:
                 names.append(n)

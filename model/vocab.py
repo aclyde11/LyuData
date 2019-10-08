@@ -127,8 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--permute_smiles', type=int, help='generates permutations of smiles', default=0)
     parser.add_argument('-r', action='store_true')
     args = parser.parse_args()
-    import torch
-    torch.autograd.set_detect_anomaly(True)
+
     print(args)
     path = args.o
     try:
