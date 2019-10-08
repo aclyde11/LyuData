@@ -18,7 +18,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def getconfig(args):
     config_ = {
         'epochs': 100,
-        'batch_size': 2048,
+        'batch_size': 512,
         'vocab_size': 37,
         'emb_size': 42,
         'sample_freq': 1,
