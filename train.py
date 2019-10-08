@@ -84,7 +84,7 @@ class ToyDataset(torch.utils.data.Dataset):
         return self.s[item], self.e[item], self.n[item]
 
 
-def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin1_weight=50.0, bin2_weight=10.0, bin3=0.2, bin3_weight=5.0):
+def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin1_weight=100.0, bin2_weight=25.0, bin3=0.2, bin3_weight=10.0):
     model.train()
     lossf = nn.L1Loss().to(device)
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
