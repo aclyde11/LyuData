@@ -84,7 +84,7 @@ class ToyDataset(torch.utils.data.Dataset):
         return self.s[item], self.e[item], self.n[item]
 
 
-def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin1_weight=100.0, bin2_weight=25.0, bin3=0.2, bin3_weight=10.0):
+def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin1_weight=100.0, bin2_weight=25.0, bin3=0.2, bin3_weight=15.0):
     model.train()
     lossf = nn.L1Loss().to(device)
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
@@ -108,11 +108,14 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.08, bin2=0.146, bin
         optimizer.step()
 
 
-def get_metrics(y_pred, y_int_pred, y, bin=0.08):
+def get_metrics(y_pred, y_int_pred, y_int_pred2, y, bin=0.08):
     from sklearn import metrics
 
-    y_int_pred = (y_int_pred >= 0.25).astype(np.int32)
+    y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
+    y_int_pred2 = (y_int_pred2 >= 0.5).astype(np.int32)
     y_int = (y <= bin).astype(np.int32)
+    y_int2 = (y <= 0.146).astype(np.int32)
+
 
     cm = metrics.confusion_matrix(y_int, y_int_pred)
     cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -126,7 +129,13 @@ def get_metrics(y_pred, y_int_pred, y, bin=0.08):
         'mcc' : metrics.matthews_corrcoef(y_int, y_int_pred),
         'recall' : metrics.recall_score(y_int, y_int_pred),
         'tnr' : cm[0,0],
-        'tpr' : cm[1,1]
+        'tpr' : cm[1,1],
+
+        '2balacc': metrics.balanced_accuracy_score(y_int2, y_int_pred2),
+        '2mcc': metrics.matthews_corrcoef(y_int2, y_int_pred2),
+        '2recall': metrics.recall_score(y_int2, y_int_pred2),
+        '2tnr': cm[0, 0],
+        '2tpr': cm[1, 1]
     }
 
     return met
@@ -136,7 +145,7 @@ def test_model(model, optimizer, dataloader, config):
     model.eval()
     with torch.no_grad():
         ys, ys_hat = [], []
-        ys_int = []
+        ys_int, ys_int2 = [], []
         names = []
         for i, (y, y_hat,name) in tqdm(enumerate(dataloader)):
             y_hat = y_hat.float().to(device)
@@ -146,15 +155,17 @@ def test_model(model, optimizer, dataloader, config):
 
             ys.append(pred1.cpu())
             ys_int.append((torch.sigmoid(pred2.cpu())))
+            ys_int2.append((torch.sigmoid(pred2.cpu())))
             ys_hat.append(y_hat.cpu())
             for n in name:
                 names.append(n)
         ys = torch.cat(ys).flatten().numpy().reshape(-1)
         ys_int = torch.cat(ys_int).flatten().numpy().reshape(-1)
         ys_hat = torch.cat(ys_hat).flatten().numpy().reshape(-1)
+        ys_int2 = torch.cat(ys_int2).flatten().numpy().reshape(-1)
 
         print("Test Numpy Suite")
-        print(get_metrics(ys, ys_int, ys_hat))
+        print(get_metrics(ys, ys_int, ys_int2, ys_hat))
         #try:
         #    np.savez_compressed(config['testdir']+"/preds.npz", y=ys, y_int=ys_int, y_true=ys_hat, names=names)
         #except KeyboardInterrupt:
