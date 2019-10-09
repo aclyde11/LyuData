@@ -190,9 +190,9 @@ def main(args):
 
     ## make data generator
     dataloader = torch.utils.data.DataLoader(input_data, pin_memory=True, batch_size=config['batch_size'],
-                                             collate_fn=mycollate, num_workers=0)
+                                             collate_fn=mycollate, num_workers=8)
     test_dataloader = torch.utils.data.DataLoader(test_data, pin_memory=True, batch_size=config['batch_size'],
-                                                  collate_fn=mycollate, num_workers=0)
+                                                  collate_fn=mycollate, num_workers=8)
 
     model = DockRegressor(config['vocab_size'], config['emb_size'], max_len=config['max_len']).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
