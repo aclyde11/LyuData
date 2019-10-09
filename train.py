@@ -115,7 +115,7 @@ def get_metrics(y_pred, y, bin=0.5):
     cm = metrics.confusion_matrix(y_int, y_int_pred)
     cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     met = {
-        'acc' : metrics.accuracy_score(y_int, y_int_pred)
+        'acc' : metrics.accuracy_score(y_int, y_int_pred),
         'balacc' : metrics.balanced_accuracy_score(y_int, y_int_pred),
         'mcc' : metrics.matthews_corrcoef(y_int, y_int_pred),
         'recall' : metrics.recall_score(y_int, y_int_pred),
