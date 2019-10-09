@@ -9,7 +9,7 @@ class DockRegressor(nn.Module):
         super(DockRegressor, self).__init__()
         self.max_len = max_len
         self.emb = nn.Embedding(vocab_size, emb_size)
-        self.lstm = nn.RNN(emb_size, 128, dropout=0.05, num_layers=4, bidirectional=True)
+        self.lstm = nn.GRU(emb_size, 128, dropout=0.05, num_layers=4, bidirectional=True)
         self.convnet = nn.Sequential(
             nn.Conv1d(128 * 2, 64, kernel_size=3, stride=1),
             nn.BatchNorm1d(64),

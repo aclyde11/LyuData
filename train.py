@@ -15,7 +15,6 @@ from model.vocab import get_vocab_from_file, START_CHAR
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-
 def getconfig(args):
     config_ = {
         'epochs': 100,
