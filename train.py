@@ -93,7 +93,7 @@ class ToyDataset(torch.utils.data.Dataset):
         name = self.n[item]
         smile = self.table[self.table.iloc[:,0] == name].iloc[-1,1]
         res = self.calc.pandas([Chem.MolFromSmiles(smile)], nproc=1, quiet=True)
-        print(res)
+        print(res.astype(np.float))
         res = torch.from_numpy(np.array(res)).float()
 
         return self.s[item], self.e[item], self.n[item], res
