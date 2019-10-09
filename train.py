@@ -91,7 +91,7 @@ class ToyDataset(torch.utils.data.Dataset):
     def __getitem__(self, item):
         #using name look up morderd thing
         name = self.n[item]
-        smile = self.table[self.table.iloc[:,0] == name].iloc[-1]
+        smile = self.table[self.table.iloc[:,0] == name].iloc[-1,1]
         res = self.calc.pandas([Chem.MolFromSmiles(smile)], nproc=1, quiet=True)
         res = torch.Tensor(res).float()
 
