@@ -130,7 +130,6 @@ def test_model(model, optimizer, dataloader, config):
     model.eval()
     with torch.no_grad():
         ys, ys_hat = [], []
-        ys_int, ys_int2 = [], []
         names = []
         for i, (y, y_hat,name) in tqdm(enumerate(dataloader)):
             y_hat = y_hat.float().to(device)
@@ -157,8 +156,6 @@ def test_model(model, optimizer, dataloader, config):
             f.write("pred,pred_int,y,name\n")
             for i in range(ys.shape[0]):
                 f.write(str(ys[i]))
-                f.write(",")
-                f.write(str(ys_int[i]))
                 f.write(",")
                 f.write(str(ys_hat[i]))
                 f.write(",")
