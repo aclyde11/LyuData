@@ -83,7 +83,7 @@ class ToyDataset(torch.utils.data.Dataset):
         self.n = n
         self.table = pd.read_csv(table)
         self.calc = Calculator(descriptors, ignore_3D=True)
-        assert (len(self.s) == len(self.e))
+        # assert (len(self.s) == len(self.e))
 
     def __len__(self):
         return len(self.s)
