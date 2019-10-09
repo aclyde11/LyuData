@@ -93,7 +93,7 @@ class ToyDataset(torch.utils.data.Dataset):
         name = self.n[item]
         smile = self.table[self.table.iloc[:,0] == name].iloc[-1,1]
         res = self.calc.pandas([Chem.MolFromSmiles(smile)], nproc=1, quiet=True)
-        print(res.astype(np.float))
+        # print(res.astype(np.float))
         res = torch.from_numpy(np.array(res, dtype=np.float32)).float()
 
         return self.s[item], self.e[item], self.n[item], res
@@ -191,9 +191,9 @@ def main(args):
 
     ## make data generator
     dataloader = torch.utils.data.DataLoader(input_data, pin_memory=True, batch_size=config['batch_size'],
-                                             collate_fn=mycollate, num_workers=8)
+                                             collate_fn=mycollate, num_workers=16)
     test_dataloader = torch.utils.data.DataLoader(test_data, pin_memory=True, batch_size=config['batch_size'],
-                                                  collate_fn=mycollate, num_workers=8)
+                                                  collate_fn=mycollate, num_workers=16)
 
     model = DockRegressor(config['vocab_size'], config['emb_size'], max_len=config['max_len']).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
