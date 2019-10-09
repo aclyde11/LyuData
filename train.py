@@ -96,7 +96,7 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1
         y = [x.to(device) for x in y]
 
         pred1 = model(y)
-        loss = lossf2(pred2.squeeze(), (y_hat <= bin1).float()).mean() #0.001
+        loss = lossf2(pred1.squeeze(), (y_hat <= bin1).float()).mean() #0.001
         # loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean() #0.005
         # loss += lossf4(pred3.squeeze(), (y_hat <= bin3).float()).mean() #0.01
 
