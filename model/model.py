@@ -27,14 +27,31 @@ class DockRegressor(nn.Module):
             nn.BatchNorm1d(8),
             nn.ReLU()
         )
+        dr = 0.1
+        self.model2 = nn.Sequential(
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(dr),
+
+            nn.Linear(128, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(dr),
+
+            nn.Linear(128, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(dr),
+        )
         # self.lstm2 = nn.GRU(8, 8, dropout=0.05, num_layers=1, batch_first=True)
 
-        self.linear1 = nn.Sequential(nn.Dropout(0.1),         nn.Linear(1552 , 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
+        self.linear1 = nn.Sequential(nn.Dropout(0.1), nn.Linear(1552 + 128, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
 
 
 
     # pass x as a pack padded sequence please.
-    def forward(self, x):
+    def forward(self, x, res):
         # do stuff to train
         batch_size = len(x)
 
@@ -51,5 +68,7 @@ class DockRegressor(nn.Module):
         # x, _ = self.lstm2(x)
         # x = x.permute((1,0, 2))
         x = x.reshape(batch_size, -1)
+
+        x = torch.cat([x, self.model2(res)], dim=-1)
 
         return self.linear1(x)
