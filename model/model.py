@@ -29,7 +29,7 @@ class DockRegressor(nn.Module):
         )
         # self.lstm2 = nn.GRU(8, 8, dropout=0.05, num_layers=1, batch_first=True)
 
-        self.linear1 = nn.Sequential(nn.Dropout(0.1),         nn.Linear(1552 * 2, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
+        self.linear1 = nn.Sequential(nn.Dropout(0.1),         nn.Linear(1552 , 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
 
 
 
