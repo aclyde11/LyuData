@@ -87,10 +87,7 @@ class ToyDataset(torch.utils.data.Dataset):
 
 def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1_weight=2.0, bin2_weight=25.0, bin3=0.5, bin3_weight=1.01):
     model.train()
-    lossf = nn.L1Loss().to(device)
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
-    # lossf3 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin2_weight).float()).to(device)
-    # lossf4 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin3_weight).float()).to(device)
 
     for i, (y, y_hat, _) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
@@ -98,9 +95,8 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1
         y_hat = y_hat.float().to(device)
         y = [x.to(device) for x in y]
 
-        pred1, pred2, _, _ = model(y)
-        loss = lossf(pred1.squeeze(), y_hat.squeeze()).mean()
-        loss += lossf2(pred2.squeeze(), (y_hat <= bin1).float()).mean() #0.001
+        pred1 = model(y)
+        loss = lossf2(pred2.squeeze(), (y_hat <= bin1).float()).mean() #0.001
         # loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean() #0.005
         # loss += lossf4(pred3.squeeze(), (y_hat <= bin3).float()).mean() #0.01
 
@@ -109,34 +105,22 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1
         optimizer.step()
 
 
-def get_metrics(y_pred, y_int_pred, y_int_pred2, y, bin=0.08):
+def get_metrics(y_pred, y, bin=0.5):
     from sklearn import metrics
 
-    y_int_pred = (y_int_pred >= 0.5).astype(np.int32)
-    y_int_pred2 = (y_int_pred2 >= 0.5).astype(np.int32)
+    y_int_pred = (y_pred >= 0.5).astype(np.int32)
     y_int = (y <= bin).astype(np.int32)
-    y_int2 = (y <= 0.5).astype(np.int32)
 
 
     cm = metrics.confusion_matrix(y_int, y_int_pred)
     cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     met = {
-        'r2_score': metrics.r2_score(y, y_pred),
-        'mse': metrics.mean_squared_error(y, y_pred),
-        'mae': metrics.mean_absolute_error(y, y_pred),
-        'median error': metrics.median_absolute_error(y, y_pred),
-
+        'acc' : metrics.accuracy_score(y_int, y_int_pred)
         'balacc' : metrics.balanced_accuracy_score(y_int, y_int_pred),
         'mcc' : metrics.matthews_corrcoef(y_int, y_int_pred),
         'recall' : metrics.recall_score(y_int, y_int_pred),
         'tnr' : cm[0,0],
         'tpr' : cm[1,1],
-
-        '2balacc': metrics.balanced_accuracy_score(y_int2, y_int_pred2),
-        '2mcc': metrics.matthews_corrcoef(y_int2, y_int_pred2),
-        '2recall': metrics.recall_score(y_int2, y_int_pred2),
-        '2tnr': cm[0, 0],
-        '2tpr': cm[1, 1]
     }
 
     return met
@@ -152,21 +136,17 @@ def test_model(model, optimizer, dataloader, config):
             y_hat = y_hat.float().to(device)
             y = [x.to(device) for x in y]
 
-            pred1, pred2, _, pred3 = model(y)
+            pred1 = model(y)
 
             ys.append(pred1.cpu())
-            ys_int.append((torch.sigmoid(pred2.cpu())))
-            ys_int2.append((torch.sigmoid(pred3.cpu())))
             ys_hat.append(y_hat.cpu())
             for n in name:
                 names.append(n)
         ys = torch.cat(ys).flatten().numpy().reshape(-1)
-        ys_int = torch.cat(ys_int).flatten().numpy().reshape(-1)
         ys_hat = torch.cat(ys_hat).flatten().numpy().reshape(-1)
-        ys_int2 = torch.cat(ys_int2).flatten().numpy().reshape(-1)
 
         print("Test Numpy Suite")
-        print(get_metrics(ys, ys_int, ys_int2, ys_hat))
+        print(get_metrics(ys, ys_hat))
         #try:
         #    np.savez_compressed(config['testdir']+"/preds.npz", y=ys, y_int=ys_int, y_true=ys_hat, names=names)
         #except KeyboardInterrupt:
