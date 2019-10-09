@@ -51,7 +51,7 @@ def get_input_data(fname, fname2, fname3, c2i):
 
     lines = open(fname2, 'r')
     ys = list(map(lambda x: torch.tensor(float(x.strip())), lines))
-    assert (len(ys) == len(lines1))
+    # assert (len(ys) == len(lines1))
     print("Read", len(lines1), "SMILES.")
 
     lines = open(fname3, 'r')
