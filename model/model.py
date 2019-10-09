@@ -9,9 +9,9 @@ class DockRegressor(nn.Module):
         super(DockRegressor, self).__init__()
         self.max_len = max_len
         self.emb = nn.Embedding(vocab_size, emb_size)
-        self.lstm = nn.RNN(emb_size, 128, dropout=0.05, num_layers=4)
+        self.lstm = nn.RNN(emb_size, 128, dropout=0.05, num_layers=4, bidirectional=True)
         self.convnet = nn.Sequential(
-            nn.Conv1d(128, 64, kernel_size=3, stride=1),
+            nn.Conv1d(128 * 2, 64, kernel_size=3, stride=1),
             nn.BatchNorm1d(64),
             nn.ReLU(),
 
@@ -29,12 +29,8 @@ class DockRegressor(nn.Module):
         )
         # self.lstm2 = nn.GRU(8, 8, dropout=0.05, num_layers=1, batch_first=True)
 
-        self.linear1 = nn.Sequential(nn.Dropout(0.15),         nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
-        self.objective_chose = nn.Sequential(nn.Dropout(0.15), nn.Linear(1552, 256), nn.BatchNorm1d(256), nn.ReLU())
+        self.linear1 = nn.Sequential(nn.Dropout(0.1),         nn.Linear(1552 * 2, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Linear(256,1))
 
-        self.linear2 =  nn.Linear(256,1)
-        self.linear3 =  nn.Linear(256,1)
-        self.linear4 =  nn.Linear(256,1)
 
 
     # pass x as a pack padded sequence please.
@@ -56,5 +52,4 @@ class DockRegressor(nn.Module):
         # x = x.permute((1,0, 2))
         x = x.reshape(batch_size, -1)
 
-        choices = self.objective_chose(x)
-        return self.linear1(x), self.linear2(choices), self.linear3(choices), self.linear4(choices)
+        return self.linear(1)
