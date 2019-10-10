@@ -92,7 +92,7 @@ class ToyDataset(torch.utils.data.Dataset):
     def __getitem__(self, item):
         #using name look up morderd thing
         name = self.n[item]
-        smile = int(self.table[self.table.iloc[:,0] == name].iloc[-1,1].index)
+        smile = int(self.table[self.table.iloc[:,0] == name].index.tolist()[0])
 
         return self.s[item], self.e[item], self.n[item], torch.from_numpy(self.data[smile]).float()
 
