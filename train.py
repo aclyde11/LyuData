@@ -81,6 +81,7 @@ class ToyDataset(torch.utils.data.Dataset):
         self.s = s
         self.e = e
         self.n = n
+        self.data = np.load("data.npy")
         self.table = pd.read_csv(table)
         self.calc = Calculator(descriptors, ignore_3D=True)
         # assert (len(self.s) == len(self.e))
@@ -91,12 +92,9 @@ class ToyDataset(torch.utils.data.Dataset):
     def __getitem__(self, item):
         #using name look up morderd thing
         name = self.n[item]
-        smile = self.table[self.table.iloc[:,0] == name].iloc[-1,1]
-        res = self.calc.pandas([Chem.MolFromSmiles(smile)], nproc=1, quiet=True)
-        # print(res.astype(np.float))
-        res = torch.from_numpy(np.array(res, dtype=np.float32)).float()
+        smile = int(self.table[self.table.iloc[:,0] == name].iloc[-1,1].index)
 
-        return self.s[item], self.e[item], self.n[item], res
+        return self.s[item], self.e[item], self.n[item], torch.from_numpy(self.data[smile]).float()
 
 
 def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1_weight=2.0, bin2_weight=25.0, bin3=0.5, bin3_weight=1.01):
@@ -191,9 +189,9 @@ def main(args):
 
     ## make data generator
     dataloader = torch.utils.data.DataLoader(input_data, pin_memory=True, batch_size=config['batch_size'],
-                                             collate_fn=mycollate, num_workers=16)
+                                             collate_fn=mycollate, num_workers=4)
     test_dataloader = torch.utils.data.DataLoader(test_data, pin_memory=True, batch_size=config['batch_size'],
-                                                  collate_fn=mycollate, num_workers=16)
+                                                  collate_fn=mycollate, num_workers=4)
 
     model = DockRegressor(config['vocab_size'], config['emb_size'], max_len=config['max_len']).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
