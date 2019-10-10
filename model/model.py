@@ -29,12 +29,12 @@ class DockRegressor(nn.Module):
         )
         dr = 0.1
         self.model2 = nn.Sequential(
-            nn.Linear(256, 128),
-            nn.BatchNorm1d(128),
+            nn.Linear(1613, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
             nn.Dropout(dr),
 
-            nn.Linear(128, 128),
+            nn.Linear(256, 128),
             nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Dropout(dr),
