@@ -108,7 +108,7 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1
 
         y_hat = y_hat.float().to(device)
         y = [x.to(device) for x in y]
-
+        res = res.float().to(device)
         pred1 = model(y, rers)
         loss = lossf2(pred1.squeeze(), (y_hat <= bin1).float()).mean() #0.001
         # loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean() #0.005
@@ -148,7 +148,7 @@ def test_model(model, optimizer, dataloader, config):
         for i, (y, y_hat,name, res) in tqdm(enumerate(dataloader)):
             y_hat = y_hat.float().to(device)
             y = [x.to(device) for x in y]
-
+            res = res.float().to(device)
             pred1 = model(y, res)
 
             ys.append(pred1.cpu())
