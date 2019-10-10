@@ -69,6 +69,8 @@ class DockRegressor(nn.Module):
         # x = x.permute((1,0, 2))
         x = x.reshape(batch_size, -1)
 
-        x = torch.cat([x, self.model2(res)], dim=-1)
+        print(res.shape)
+        res =  self.model2(res)
+        x = torch.cat([x, res], dim=-1)
 
         return self.linear1(x)
