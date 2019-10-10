@@ -101,7 +101,8 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1
     model.train()
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
 
-    for i, (y, y_hat, _, res) in tqdm(enumerate(dataloader)):
+    pb = tqdm(enumerate(dataloader), postfix={'loss' : 0})
+    for i, (y, y_hat, _, res) in pb:
         optimizer.zero_grad()
 
         y_hat = y_hat.float().to(device)
@@ -113,6 +114,7 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1
         # loss += lossf4(pred3.squeeze(), (y_hat <= bin3).float()).mean() #0.01
 
         loss.backward()
+        pb.set_postfix({'loss' : loss.item()})
 
         optimizer.step()
 
@@ -189,9 +191,9 @@ def main(args):
 
     ## make data generator
     dataloader = torch.utils.data.DataLoader(input_data, pin_memory=True, batch_size=config['batch_size'],
-                                             collate_fn=mycollate, num_workers=4)
+                                             collate_fn=mycollate, num_workers=16)
     test_dataloader = torch.utils.data.DataLoader(test_data, pin_memory=True, batch_size=config['batch_size'],
-                                                  collate_fn=mycollate, num_workers=4)
+                                                  collate_fn=mycollate, num_workers=16)
 
     model = DockRegressor(config['vocab_size'], config['emb_size'], max_len=config['max_len']).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
