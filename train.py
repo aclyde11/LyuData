@@ -103,13 +103,13 @@ def train_epoch(model, optimizer, dataloader, config, bin1=0.5, bin2=0.146, bin1
     model.train()
     lossf2 = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(bin1_weight).float()).to(device)
 
-    for i, (y, y_hat, _, rers) in tqdm(enumerate(dataloader)):
+    for i, (y, y_hat, _, res) in tqdm(enumerate(dataloader)):
         optimizer.zero_grad()
 
         y_hat = y_hat.float().to(device)
         y = [x.to(device) for x in y]
         res = res.float().to(device)
-        pred1 = model(y, rers)
+        pred1 = model(y, res)
         loss = lossf2(pred1.squeeze(), (y_hat <= bin1).float()).mean() #0.001
         # loss += lossf3(pred3.squeeze(), (y_hat <= bin2).float()).mean() #0.005
         # loss += lossf4(pred3.squeeze(), (y_hat <= bin3).float()).mean() #0.01
